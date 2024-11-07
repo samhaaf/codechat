@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "oneOf": [
+        { "type": "string" },
+        { "$ref": "./rename.json" }
+      ]
+    },
+    "schemas": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "./schema.json" },
+          { "$ref": "./$drop.json" },
+          { "$ref": "./$ref.json" }
+        ]
+      }
+    }
+  },
+  "required": ["name", "schemas"]
+}

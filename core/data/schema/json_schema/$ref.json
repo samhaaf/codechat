@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "$ref": {
+      "type": "string"
+    }
+  },
+  "required": ["$ref"]
+}

@@ -1,0 +1,42 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "oneOf": [
+        { "type": "string" },
+        { "$ref": "./rename.json" }
+      ]
+    },
+    "procedures": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "./procedure.json" },
+          { "$ref": "./$drop.json" },
+          { "$ref": "./$ref.json" }
+        ]
+      }
+    },
+    "extensions": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "type": "string" },
+          { "$ref": "./$drop.json" },
+          { "$ref": "./$ref.json" }
+        ]
+      }
+    },
+    "tables": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "./table.json" },
+          { "$ref": "./$drop.json" },
+          { "$ref": "./$ref.json" }
+        ]
+      }
+    }
+  },
+  "required": ["name", "tables"]
+}

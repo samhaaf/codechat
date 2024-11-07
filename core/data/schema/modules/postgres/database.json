@@ -1,0 +1,10 @@
+{
+    "type": "database",
+    "name": "$var.name",
+    "extensions": [
+        "uuid-ossp"
+    ],
+    "modules": [],
+    "procedures": [],
+    "tables": []
+}

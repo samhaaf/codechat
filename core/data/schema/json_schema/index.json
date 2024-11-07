@@ -1,0 +1,17 @@
+{
+    "type": "object",
+    "properties": {
+      "name":  {
+        "oneOf": [
+          { "type": "string" },
+          { "$ref": "./rename.json" }
+        ]
+      },
+      "columns": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "type": { "type": "string" }
+    },
+    "required": ["name", "columns"]
+}

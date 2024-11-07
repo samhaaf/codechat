@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "oneOf": [
+        { "type": "string" },
+        { "$ref": "./rename.json" }
+      ]
+    },
+    "type": { "type": "string" },
+    "is_primary": { "type": "boolean" },
+    "nullable": { "type": "boolean" },
+    "references": {
+      "type": "object",
+      "properties": {
+        "table": { "type": "string" },
+        "value": { "type": "string" }
+      },
+      "required": ["table", "value"]
+    },
+    "default": { "type": "string" },
+    "constraints": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "$replace": { "type": "string" }
+  },
+  "required": ["name", "type"]
+}

@@ -1,0 +1,36 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "oneOf": [
+        { "type": "string" },
+        { "$ref": "./rename.json" }
+      ]
+    },
+    "indexes": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {"$ref": "./index.json"}
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {"$ref": "./constraint.json"}
+      }
+    },
+    "columns": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "./column.json" },
+          { "$ref": "./$drop.json" },
+          { "$ref": "./$ref.json" }
+        ]
+      }
+    }
+  },
+  "required": ["name", "columns"]
+}

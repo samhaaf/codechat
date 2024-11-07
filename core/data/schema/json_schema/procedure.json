@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "oneOf": [
+        { "type": "string" },
+        { "$ref": "./rename.json" }
+      ]
+    },
+    "sql": { "type": "string" },
+    "args": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string" }
+        },
+        "required": ["name", "type"]
+      }
+    }
+  },
+  "required": ["name", "sql"]
+}

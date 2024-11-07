@@ -1,0 +1,16 @@
+{
+    "name": "user",
+    "columns": [
+        {
+            "name": "password_hash",
+            "type": "VARCHAR(255)",
+            "nullable": false
+        },
+        {
+            "name": "needs_new_password",
+            "type": "bool",
+            "nullable": false,
+            "default": true
+        }
+    ]
+}

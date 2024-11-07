@@ -1,0 +1,7 @@
+{
+    "tables": [
+        { "$ref": "./tables/user.json" },
+        { "$ref": "./tables/refresh_token.json" },
+        { "$ref": "./tables/access.json" }
+    ]
+}

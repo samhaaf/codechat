@@ -1,0 +1,14 @@
+{
+    "name": "postgres",
+    "depends_on": ["postgres"],
+    "applies_to": "database",
+    "database": {
+        "$ref": "./database.json"
+    },
+    "variables": {
+        "database_name": {
+            "type": "string",
+            "default": "postgres"
+        }
+    }
+}

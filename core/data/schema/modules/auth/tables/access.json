@@ -1,0 +1,57 @@
+{
+    "name": "access",
+    "columns": [
+        {
+            "name": "uid",
+            "type": "UUID",
+            "default": "UUID_GENERATE_V4()",
+            "is_primary": true
+        },
+        {
+            "name": "table_name",
+            "type": "varchar(255)",
+            "nullable": false
+        },
+        {
+            "name": "user_uid",
+            "nullable": true,
+            "references": "user.uid"
+        },
+        {
+            "name": "group_uid",
+            "nullable": true,
+            "references": "group.uid"
+        },
+        {
+            "name": "row_conditions",
+            "type": "JSON",
+            "nullable": false
+        },
+        {
+            "name": "can_read",
+            "type": "BOOLEAN",
+            "nullable": true
+        },
+        {
+            "name": "can_update",
+            "type": "BOOLEAN",
+            "nullable": true
+        },
+        {
+            "name": "can_insert",
+            "type": "BOOLEAN",
+            "nullable": true
+        },
+        {
+            "name": "can_delete",
+            "type": "BOOLEAN",
+            "nullable": true
+        }
+    ],
+    "constraints": [
+        {
+            "type": "CHECK",
+            "condition": "((user_uid IS NOT NULL AND group_uid IS NULL) OR (group_uid IS NOT NULL AND user_uid IS NULL))"
+        }
+    ]
+}

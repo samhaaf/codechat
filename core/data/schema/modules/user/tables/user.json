@@ -1,0 +1,29 @@
+{
+    "name": "user",
+    "columns": [
+        {
+            "name": "uid",
+            "type": "UUID",
+            "default": "uuid_generate_v4()",
+            "is_primary": true
+        },
+        {
+            "name": "email",
+            "type": "VARCHAR(255)",
+            "nullable": false,
+            "constraints": ["UNIQUE"]
+        },
+        {
+            "name": "first_name",
+            "type": "VARCHAR(255)",
+            "nullable": false,
+            "constraints": []
+        },
+        {
+            "name": "last_name",
+            "type": "VARCHAR(255)",
+            "nullable": false,
+            "constraints": []
+        }
+    ]
+}

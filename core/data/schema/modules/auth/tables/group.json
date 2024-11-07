@@ -1,0 +1,11 @@
+{
+    "name": "group",
+    "columns": [
+        {
+            "name": "is_admin",
+            "type": "bool",
+            "nullable": false,
+            "default": false
+        }
+    ]
+}

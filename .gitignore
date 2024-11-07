@@ -1,0 +1,9 @@
+build
+poetry.lock
+
+**/*.egg-info
+
+**/.DS_Store
+
+**/__pycache__
+**/*.pyc

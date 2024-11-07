@@ -1,0 +1,48 @@
+{
+    "name": "refresh_token",
+    "columns": [
+        {
+            "name": "uid",
+            "type": "UUID",
+            "nullable": false,
+            "default": "uuid_generate_v4()"
+        },
+        {
+            "name": "user_uid",
+            "type": "UUID",
+            "nullable": false
+        },
+        {
+            "name": "is_invalidated",
+            "type": "BOOLEAN",
+            "nullable": true,
+            "default": "FALSE"
+        },
+        {
+            "name": "issued_timestamp",
+            "type": "TIMESTAMPTZ",
+            "nullable": true,
+            "default": "NOW()"
+        },
+        {
+            "name": "ttl",
+            "type": "INTEGER",
+            "nullable": true,
+            "default": "604800"
+        }
+    ],
+    "constraints": [
+        {
+            "type": "PRIMARY KEY",
+            "column": "uid"
+        },
+        {
+            "type": "FOREIGN KEY",
+            "column": "user_uid",
+            "references": {
+                "table": "logscale.user",
+                "column": "uid"
+            }
+        }
+    ]
+}

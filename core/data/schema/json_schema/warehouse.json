@@ -1,0 +1,23 @@
+{
+  "oneOf": [
+    {
+      "$ref": "./database.json"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "databases": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "$ref": "./database.json" },
+              { "$ref": "./$drop.json" },
+              { "$ref": "./$ref.json" }
+            ]
+          }
+        }
+      },
+      "required": ["databases"]
+    }
+  ]
+}

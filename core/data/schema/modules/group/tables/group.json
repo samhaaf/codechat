@@ -1,0 +1,26 @@
+{
+    "name": "group",
+    "columns": [
+        {
+            "name": "uid",
+            "type": "UUID",
+            "default": "uuid_generate_v4()",
+            "is_primary": true
+        },
+        {
+            "name": "name",
+            "type": "VARCHAR(255)",
+            "nullable": false
+        },
+        {
+            "name": "user_uid",
+            "nullable": true,
+            "references": "user.uid"
+        },
+        {
+            "name": "group_uid",
+            "nullable": true,
+            "references": "group.uid"
+        },
+    ]
+}
