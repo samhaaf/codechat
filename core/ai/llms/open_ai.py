@@ -4,7 +4,10 @@ from openai import OpenAI, AsyncOpenAI  # Updated import
 import os
 
 # Updated client instantiation
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client =  None
+def get_client():
+    global client
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class OpenAI_LLM(LLM):
 
@@ -41,6 +44,7 @@ class OpenAI_LLM(LLM):
         """
         Asynchronous call to the OpenAI API.
         """
+        get_client()
         if max_completion_words:
             if max_completion_tokens is not None:
                 raise RuntimeError('Ambiguous request for max_response_tokens and max_response_words.')
@@ -70,6 +74,7 @@ class OpenAI_LLM(LLM):
         """
         Synchronous call to the OpenAI API.
         """
+        get_client()
         stream = False if self.no_stream else stream
         if max_completion_words:
             if max_completion_tokens is not None:

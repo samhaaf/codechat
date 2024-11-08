@@ -6,6 +6,7 @@ import threading
 import time
 import sys
 import traceback
+import re
 from .files import get_updated_files_in, get_files_content, display_files, DEFAULT_EXCLUSION_RULES
 # from .diffs import diff_cli
 from .art import title_art
@@ -98,7 +99,72 @@ def main():
             ui.print_info('|: No errors to display')
         errors = []
 
+
+    def handle_api_key():
+        """
+        Checks for OPENAI_API_KEY in environment variables.
+        If not found, prompts the user to input it and optionally saves it to shell profiles.
+        """
+        if 'OPENAI_API_KEY' in os.environ and os.environ['OPENAI_API_KEY']:
+            return  # API Key already set
+
+        # List of potential shell profile files
+        shell_profiles = [
+            os.path.expanduser("~/.bashrc"),
+            os.path.expanduser("~/.bash_profile"),
+            os.path.expanduser("~/.zshrc"),
+            os.path.expanduser("~/.profile"),
+            os.path.expanduser("~/.zprofile")
+        ]
+
+        # Check if it's been added recently
+        api_key = None
+        for profile in shell_profiles:
+            if os.path.exists(profile):
+                with open(profile) as file:
+                    for line in file:
+                        match = re.match(r'export OPENAI_API_KEY=(.*)', line)
+                        if match:
+                            value = match.groups()[0]
+                            api_key = value.strip('"').strip("'")
+                            os.environ['OPENAI_API_KEY'] = api_key.strip()
+                            return
+
+        ui.print_warning("OPENAI_API_KEY not found in environment variables.")
+
+        # Prompt user to enter the API key
+        api_key = ui.get_user_input("|< Please enter your OpenAI API Key: ")
+
+        if not api_key.strip():
+            ui.print_error("No API Key entered. Exiting application.")
+            sys.exit(1)
+
+        # Set the API key in the environment
+        os.environ['OPENAI_API_KEY'] = api_key.strip()
+
+        # Ask user if they want to save the API key to their shell profile
+        save_key = ui.get_confirmation("Do you want to save it for future sessions?")
+
+        if save_key:
+            export_line = f'\nexport OPENAI_API_KEY="{api_key.strip()}"\n'
+
+            for profile in shell_profiles:
+                try:
+                    # Check if the profile file exists
+                    if os.path.exists(profile):
+                        # Read the current content to avoid duplicates
+                        with open(profile, 'r') as file:
+                            content = file.read()
+                        with open(profile, 'a') as file:
+                            file.write(export_line)
+                        ui.print_info(f"Added OPENAI_API_KEY to {profile}")
+                except Exception as e:
+                    ui.print_error(f"Failed to update {profile}: {str(e)}")
+        else:
+            ui.print_warning("API Key not saved to shell profiles.")
+
     ui.print(title_art)
+    handle_api_key()
     reset()
 
     try:
@@ -165,7 +231,7 @@ def main():
                     first_chunk = next(stream)
                 except Exception:
                     print(traceback.format_exc())
-                    first_chunk = None 
+                    first_chunk = None
                     raise
             thread = threading.Thread(target=_do)
             thread.start()

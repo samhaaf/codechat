@@ -5,8 +5,7 @@ A command-line tool for software development LLM workflows.
 
 ```
 git clone https://www.github.com/samhaaf/codechat
-cd codechat
-pip install
+pip install ./codechat
 ```
 
 
@@ -62,5 +61,6 @@ my_secrets/
 
 ## Roadmap
 
-- [ ] Apply changes directly to files 
+- [ ] Apply changes directly to files
 - [ ] Multi-agent workflows
+- [ ] Make chat history retrievable with up/down arrows
