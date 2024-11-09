@@ -1,0 +1,54 @@
+Look at how I'm handling the .gptignore files. I'm including their pathspecs as I go nested into the file crawling.!@#
+
+well..
+
+I need to do another this-directory-and-deeper paradigm like this one, for files call .gptassert.
+
+.gptassert files are where we create rules for chatgpt to follow for all of the files in the given directory and it's child directories.
+
+We need to take the content from each of these .gptassert files and print it before each of the file contents.
+
+Let's say we have a dir like this
+
+a/
+  .gptassert
+  b/
+    .gptassert
+    foo
+  bar
+
+We need to include our files in the chat history like this:
+
+FOR ALL FILES IN a/
+```gptassert
+<contents of that file>
+```
+
+```a/bar
+<contantes of bar>
+```
+
+FOR ALL FILES IN a/b/
+```gptassert
+<contents of that file>
+```
+
+```a/b/foo
+<contents of foo>
+```
+
+
+Before implementing this solution, let's discuss it and see if we can norrow in on the best way to display this information. What I just gave you contains somewhat correct answer, but mayne there's a better way to display our files that makes the gptassert rules more explicitly applicable to the files. It's not immediatley clear that these rules are supposed to apply to all subdirs, recursively. Maybe the best option is to wrap dirs in some XML type structure to tmake the sections of the dirs and subdirs more explicitly obvious? Like maybe lik ethis
+
+<DIR ./a>
+{contents of ./a/.gptignore}
+<FILE ./a/bar>
+{contents of ./a/bar}
+</FILE
+<DIR ./a/b/>
+{contents of ./a/b/.gptassert}
+<FILE ./a/b/foo>
+{contents of ./a/b/foo}
+<FILE>
+</DIR>
+</DIR>
