@@ -82,7 +82,7 @@ def main():
     if args.CHDIR:
         os.chdir(args.CHDIR)
 
-    model = args.model if args.model else config.get('model', '4o') 
+    model = args.model if args.model else config.get('model', '4o')
     included_files = args.paths
     session = None
     prompt = ""
@@ -218,10 +218,17 @@ def main():
                 parts = user_input.strip().split(' ', 2)
                 if len(parts) == 2:
                     new_model = parts[1]
+                    if new_model not in models:
+                        ui.print_error(f"Model '{new_model}' is not recognized.")
+                        continue
                     try:
-                        update_config('model', new_model)
                         ui.print_info(f"Model set to '{new_model}'")
-                        reset(new_model)
+                        # Instantiate the new LLM model
+                        new_llm_instance = models[new_model]()
+                        # Fork the current session with the new model
+                        session = session.fork(new_llm_instance)
+                        # Update the model variable
+                        model = new_model
                     except Exception as e:
                         ui.print_error(str(e))
                 else:
@@ -276,7 +283,12 @@ def main():
                         ui.print_info(f"Configuration '{option}' updated to '{value}'.")
                         # Handle any immediate changes, e.g., if model is updated
                         if option == 'model':
-                            reset(value)
+                            if value in models:
+                                new_llm_instance = models[value]()
+                                session = session.fork(new_llm_instance)
+                                model = value
+                            else:
+                                ui.print_error(f"Model '{value}' is not recognized.")
                     except (ValueError, TypeError) as e:
                         ui.print_error(str(e))
                     except Exception as e:
