@@ -7,11 +7,10 @@ import time
 import sys
 import traceback
 import re
-from .files import get_updated_files_in, get_files_content, display_files, DEFAULT_EXCLUSION_RULES
-# from .diffs import diff_cli
+from .files import get_updated_files_in, get_files_content, display_files
 from .art import title_art
 from .prompts import system_prompt, totality_prompt, spelling_prompt
-from .config import config
+from .config import config, update_config, ALLOWED_CONFIG_OPTIONS
 from .user_interface import UserInterface
 from .apply_diff import apply_cli
 # from .apply_updates import check_for_file_updates  # Import the new function
@@ -28,12 +27,13 @@ def main():
         "/diff",
         "/diffs",
         "/included",
-        '/model'
+        '/model',
+        '/config'
     ]
 
     ui = UserInterface()  # Initialize the UserInterface
 
-    def new_session(model='o1-mini', history=None):
+    def new_session(model='4o', history=None):
         ui.print_info(f'New session with model `{model}`..')
         session = models[model]().get_session(history=history)
         return session
@@ -44,15 +44,45 @@ def main():
         return ''
 
     parser = argparse.ArgumentParser(description='AI Assistant for Coding Assistance')
-    parser.add_argument('--model', '-m', type=str, default='4o')
+    parser.add_argument('--model', '-m', type=str, default=config.get('model', '4o'), help='Specify the model to use')
     parser.add_argument('--CHDIR', type=str, help='Path to change the current directory to', default=None)
+    parser.add_argument('--set', type=str, help='Path to a config.json file to set configuration')
     parser.add_argument('paths', nargs='*', help='Paths to included_files in the session')
     args = parser.parse_args()
 
+    # Handle --set
+    if args.set:
+        set_config_path = args.set
+        if os.path.isfile(set_config_path):
+            try:
+                with open(set_config_path, 'r') as f:
+                    new_config = json.load(f)
+                # Validate and update config
+                for key, value in new_config.items():
+                    if key in ALLOWED_CONFIG_OPTIONS:
+                        expected_type = ALLOWED_CONFIG_OPTIONS[key]
+                        if isinstance(value, expected_type):
+                            config[key] = value
+                        else:
+                            ui.print_warning(f"Invalid type for '{key}'. Expected {expected_type.__name__}. Skipping.")
+                    else:
+                        ui.print_warning(f"Unknown configuration option: '{key}'. Skipping.")
+                save_config(config)
+                ui.print_info(f"Configuration updated from {set_config_path}")
+            except json.JSONDecodeError:
+                ui.print_error(f"Error: The file {set_config_path} is not valid JSON.")
+            except Exception as e:
+                ui.print_error(f"Error updating configuration: {e}")
+        else:
+            ui.print_error(f"Error: The file {set_config_path} does not exist.")
+        # Optionally, exit after setting config
+        sys.exit(0)
+
+    # Handle --CHDIR
     if args.CHDIR:
         os.chdir(args.CHDIR)
 
-    model = args.model
+    model = args.model if args.model else config.get('model', '4o') 
     included_files = args.paths
     session = None
     prompt = ""
@@ -61,7 +91,7 @@ def main():
     last_delta_times = {}
     last_input_time = time.time()
     errors = []
-    exclusion_rules = copy.copy(DEFAULT_EXCLUSION_RULES)
+    exclusion_rules = copy.copy(config['exclude'])
 
     def reset(_model=None):
         nonlocal session, prompt, last_delta_times, included_files, model
@@ -98,7 +128,6 @@ def main():
         else:
             ui.print_info('|: No errors to display')
         errors = []
-
 
     def handle_api_key():
         """
@@ -155,9 +184,10 @@ def main():
                         # Read the current content to avoid duplicates
                         with open(profile, 'r') as file:
                             content = file.read()
-                        with open(profile, 'a') as file:
-                            file.write(export_line)
-                        ui.print_info(f"Added OPENAI_API_KEY to {profile}")
+                        if 'OPENAI_API_KEY' not in content:
+                            with open(profile, 'a') as file:
+                                file.write(export_line)
+                            ui.print_info(f"Added OPENAI_API_KEY to {profile}")
                 except Exception as e:
                     ui.print_error(f"Failed to update {profile}: {str(e)}")
         else:
@@ -185,7 +215,17 @@ def main():
                 continue
 
             if user_input.strip().split(' ')[0] == '/model':
-                reset(user_input.strip().split(' ')[1])
+                parts = user_input.strip().split(' ', 2)
+                if len(parts) == 2:
+                    new_model = parts[1]
+                    try:
+                        update_config('model', new_model)
+                        ui.print_info(f"Model set to '{new_model}'")
+                        reset(new_model)
+                    except Exception as e:
+                        ui.print_error(str(e))
+                else:
+                    ui.print_error("Usage: /model <new_model>")
                 continue
 
             if user_input.strip() == '/apply':
@@ -207,6 +247,42 @@ def main():
             if user_input.strip().split(' ')[0] == '/include':
                 update_included_files()
                 display_files(included_files, exclusion_rules=exclusion_rules)
+                continue
+
+            if user_input.strip().split(' ')[0] == '/config':
+                parts = user_input.strip().split(' ', 2)
+                if len(parts) == 2 and parts[1] == 'help':
+                    ui.print_info("Usage: /config <option> <value>")
+                    ui.print_info("Available options:")
+                    for option in DEFAULT_CONFIG.keys():
+                        ui.print_info(f" - {option}")
+                elif len(parts) == 3:
+                    _, option, value = parts
+                    try:
+                        # Type casting based on expected type
+                        expected_type = ALLOWED_CONFIG_OPTIONS.get(option)
+                        if expected_type == int:
+                            value = int(value)
+                        elif expected_type == float:
+                            value = float(value)
+                        elif expected_type == bool:
+                            value = value.lower() in ['true', '1', 'yes']
+                        elif expected_type == str:
+                            value = str(value)
+                        else:
+                            raise ValueError(f"No type handling implemented for '{option}'.")
+
+                        update_config(option, value)
+                        ui.print_info(f"Configuration '{option}' updated to '{value}'.")
+                        # Handle any immediate changes, e.g., if model is updated
+                        if option == 'model':
+                            reset(value)
+                    except (ValueError, TypeError) as e:
+                        ui.print_error(str(e))
+                    except Exception as e:
+                        ui.print_error(f"Error: {e}")
+                else:
+                    ui.print_error("Usage: /config <option> <value> or /config help")
                 continue
 
             if '/totality' in user_input:
@@ -252,7 +328,8 @@ def main():
             )
 
             # Print first chunk because we nexted it as our break indicator
-            ui.print(first_chunk, end='', flush=True)
+            if first_chunk:
+                ui.print(first_chunk, end='', flush=True)
 
             # Iterate response
             last_response = ""
@@ -269,3 +346,6 @@ def main():
             prompt = ""
     except KeyboardInterrupt:
         sys.exit(0)
+
+if __name__ == "__main__":
+    main()

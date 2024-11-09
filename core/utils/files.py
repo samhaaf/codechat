@@ -2,40 +2,6 @@ import os
 import re
 import pathspec
 
-DEFAULT_EXCLUSION_RULES = set([
-    '**/.git/',
-    '**/.gitignore',
-    '**/.gptignore',
-    '.gpt',
-    'poetry.lock',
-    "**/*.pyc",
-    "**/*__pycache__",
-    "**/*.pyo",
-    "**/*.pyd",
-    "**/*.pyc",
-    "**/*.pyo",
-    "**/*.pyd",
-    "**/*.egg-info/",
-    "**/dist/",
-    "**/build/",
-    "**/*.egg",
-    "**/node_modules/",
-    "**/npm-debug.log",
-    "**/yarn-error.log",
-    '**/.DS_Store',
-    "**/.idea/",
-    "**/.vscode/",
-    "**/*.iml",
-    "**/*.ipr",
-    "**/*.iws",
-    "**/*.suo",
-    "**/*.user",
-    "**/*.userosscache",
-    "**/*.sln.docstates",
-    "**/*.sln.ide/",
-    "**/.DS_Store",
-])
-
 def crawl_files(
     path, exclusion_files=['.gitignore', '.gptignore'], exclusion_rules=set(), base_path=None
 ):

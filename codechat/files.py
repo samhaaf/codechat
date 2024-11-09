@@ -1,5 +1,6 @@
 import os
-from core.utils.files import crawl_files, DEFAULT_EXCLUSION_RULES
+from core.utils.files import crawl_files
+from .config import config
 
 
 def find_nearest_parent_timestamp(path, timestamps):
@@ -17,7 +18,7 @@ def has_file_been_updated_since(file_path, timestamp):
     file_mod_time = os.path.getmtime(file_path)
     return file_mod_time > timestamp
 
-def get_updated_files_in(paths, timestamps, default_timestamp=0, exclusion_files=['.gitignore', '.gptignore'], exclusion_rules=set(DEFAULT_EXCLUSION_RULES)):
+def get_updated_files_in(paths, timestamps, default_timestamp=0, exclusion_files=['.gitignore', '.gptignore'], exclusion_rules=set(config['exclude'])):
     """Get a list of files in the given paths that have been updated since their respective timestamps."""
     updated_items = []
 
@@ -52,7 +53,7 @@ def file_to_string(file_path, line_numbers=False):
 
     return f"\n```{file_path}\n{''.join(content)}\n```\n"
 
-def get_files_content(paths, exclusion_files=['.gitignore', '.gptignore'], exclusion_rules=set(DEFAULT_EXCLUSION_RULES), line_numbers=False):
+def get_files_content(paths, exclusion_files=['.gitignore', '.gptignore'], exclusion_rules=set(config['exclude']), line_numbers=False):
     """Get the content of files in the specified format."""
     all_files = []
     for path in paths:
@@ -61,7 +62,7 @@ def get_files_content(paths, exclusion_files=['.gitignore', '.gptignore'], exclu
     return "\n\n".join([file_to_string(file, line_numbers) for file in all_files])
 
 def display_files(
-    paths, exclusion_files=['.gitignore', '.gptignore'], exclusion_rules=set(DEFAULT_EXCLUSION_RULES)
+    paths, exclusion_files=['.gitignore', '.gptignore'], exclusion_rules=set(config['exclude'])
 ):
     """Display the structure of the files and directories in a tree format."""
     # Get all files using crawl_files
