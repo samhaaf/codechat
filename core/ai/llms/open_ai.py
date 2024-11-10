@@ -18,6 +18,7 @@ class OpenAI_LLM(LLM):
         prompt_token_cost: float,       # In dollars / 1000 tokens
         completion_token_cost: float,   # In dollars / 1000 tokens
         temperature: float | None = None,
+        request_timeout = None,
         _async: bool = False,
         no_system_prompt = False,
         encoding_for_model = None,
@@ -32,6 +33,7 @@ class OpenAI_LLM(LLM):
             completion_token_cost=completion_token_cost,
             encoder=encoder.encode,
             decoder=encoder.decode,
+            request_timeout = request_timeout,
             _async=_async,
             no_system_prompt=no_system_prompt
         )
@@ -58,6 +60,9 @@ class OpenAI_LLM(LLM):
         }
         if num_choices is not None:
             params['n'] = num_choices
+
+        if self.request_timeout is not None and self.request_timeout > 0:
+            params['request_timeout'] = request_timeout
 
         if stream:
             response = await AsyncOpenAI().chat.completions.create(**params, stream=True)
@@ -89,6 +94,9 @@ class OpenAI_LLM(LLM):
         }
         if num_choices is not None:
             params['n'] = num_choices
+
+        if self.request_timeout is not None and self.request_timeout > 0:
+            params['request_timeout'] = request_timeout
 
         if stream:
             response = client.chat.completions.create(**params, stream=True)
@@ -174,6 +182,7 @@ class GPT_O1_Preview(OpenAI_LLM):
             max_completion_tokens=32768 ,
             prompt_token_cost=0.01,
             completion_token_cost=0.03,
+            request_timeout=200,
             _async=_async,
             no_system_prompt = True,
             encoding_for_model='gpt-4o',
@@ -189,6 +198,7 @@ class GPT_O1_Mini(OpenAI_LLM):
             max_completion_tokens=32768,
             prompt_token_cost=0.01,
             completion_token_cost=0.03,
+            request_timeout=200,
             _async=_async,
             no_system_prompt = True,
             encoding_for_model='gpt-4o',

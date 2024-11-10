@@ -150,6 +150,7 @@ class LLM(metaclass=ABCMeta):
         completion_token_cost: float,   # In dollars / 1000 tokens
         encoder: callable,
         decoder: callable,
+        request_timeout = None,
         _async: bool = False,
         no_system_prompt = False,
     ):
@@ -158,6 +159,7 @@ class LLM(metaclass=ABCMeta):
         self.max_completion_tokens = max_completion_tokens
         self.prompt_token_cost = prompt_token_cost
         self.completion_token_cost = completion_token_cost
+        request_timeout = request_timeout
         self._async = _async
         self._sessions = []
         self.encoder = encoder

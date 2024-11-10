@@ -326,7 +326,7 @@ def main():
 
             # Print timer
             start = time.time()
-            while first_chunk == -1:
+            while first_chunk == -1 and time.time() - start < 200:
                 ui.print_info(
                     f"Awaiting response.. ({round(time.time() - start, 1)}s)",
                     end='\r', flush=True
@@ -338,6 +338,10 @@ def main():
             ui.print_info(
                 f"Awaiting response.. ({round(time.time() - start, 1)}s)\n\n",
             )
+
+            if time.time() - start >= 200 and first_chunk == -1:
+                ui.print_warning('Request timed out. Consider reducing input size.')
+                continue
 
             # Print first chunk because we nexted it as our break indicator
             if first_chunk:
