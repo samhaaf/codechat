@@ -9,11 +9,11 @@ import traceback
 import re
 from .files import get_updated_files_in, get_files_content, display_files
 from .art import title_art
-from .prompts import system_prompt, totality_prompt, spelling_prompt
-from .config import config, update_config, ALLOWED_CONFIG_OPTIONS
+from .prompts import system_prompt, spelling_prompt  # Removed totality_prompt
+from .config import config, update_config, ALLOWED_CONFIG_OPTIONS, save_config
 from .user_interface import UserInterface
 from .apply_diff import apply_cli
-# from .apply_updates import check_for_file_updates  # Import the new function
+import json
 
 def main():
     valid_commands = [
@@ -22,13 +22,14 @@ def main():
         "/patch",
         "/errors",
         "/include",
-        "/totality",
-        "/spelling",
         "/diff",
         "/diffs",
         "/included",
         '/model',
-        '/config'
+        '/config',
+        '/prompt',
+        '/debug',
+        '/prompt-edit'
     ]
 
     ui = UserInterface()  # Initialize the UserInterface
@@ -40,7 +41,7 @@ def main():
 
     def get_files_prompt(paths):
         if len(paths) > 0:
-            return get_files_content(paths, exclusion_rules=exclusion_rules) + "\n\n"
+            return get_files_content(paths, exclusion_rules=exclusion_rules)
         return ''
 
     parser = argparse.ArgumentParser(description='AI Assistant for Coding Assistance')
@@ -92,6 +93,16 @@ def main():
     last_input_time = time.time()
     errors = []
     exclusion_rules = copy.copy(config['exclude'])
+
+    # Ensure default prompts exist
+    if 'prompts' not in config:
+        config['prompts'] = {}
+    if 'totality' not in config['prompts']:
+        config['prompts']['totality'] = (
+            "Be thorough. Don't break existing code. Output all of the files you change in totality. "
+            "Don't use any placeholders like '...' or 'your logic goes here'."
+        )
+        save_config(config)
 
     def reset(_model=None):
         nonlocal session, prompt, last_delta_times, included_files, model
@@ -193,6 +204,43 @@ def main():
         else:
             ui.print_warning("API Key not saved to shell profiles.")
 
+    def create_prompt(prompt_name):
+        """CLI to create a new prompt."""
+        ui.print_info(f"Creating a new prompt: '{prompt_name}'")
+        prompt_content = ui.get_user_input("|< Enter the prompt content (finish with '!@#' on a new line): ")
+        config['prompts'][prompt_name] = prompt_content
+        save_config(config)
+        ui.print_info(f"Prompt '{prompt_name}' has been created.")
+
+    def edit_prompt(prompt_name):
+        """CLI to edit an existing prompt."""
+        if prompt_name not in config['prompts']:
+            ui.print_error(f"Prompt '{prompt_name}' does not exist.")
+            return
+        ui.print_info(f"Editing prompt: '{prompt_name}'")
+        current_content = config['prompts'][prompt_name]
+        ui.print_info(f"Current content:\n{current_content}")
+        new_content = ui.get_user_input("|< Enter the new prompt content (finish with '!@#' on a new line): ")
+        config['prompts'][prompt_name] = new_content
+        save_config(config)
+        ui.print_info(f"Prompt '{prompt_name}' has been updated.")
+
+    def handle_prompt_command(command_parts):
+        """Handle the /prompt command within user input."""
+        nonlocal prompt
+        if len(command_parts) < 2:
+            ui.print_warning("Usage: /prompt <prompt_name>")
+            return
+        prompt_name = command_parts[1]
+        if prompt_name in config['prompts']:
+            replacement = config['prompts'][prompt_name]
+            # Replace the /prompt <prompt_name> with the actual prompt content
+            return ' '.join(command_parts[:0] + [replacement] + command_parts[2:])
+        else:
+            ui.print_warning(f"Prompt '{prompt_name}' not found. Starting prompt creation.")
+            create_prompt(prompt_name)
+            return ''
+
     ui.print(title_art)
     handle_api_key()
     reset()
@@ -205,6 +253,43 @@ def main():
                 ui.print_warning('No user input provided.')
                 continue
 
+            # Check if the first input is /prompt-edit
+            if user_input.strip().startswith('/prompt-edit'):
+                parts = user_input.strip().split(' ', 1)
+                if len(parts) != 2:
+                    ui.print_error("Usage: /prompt-edit <prompt_name>")
+                    continue
+                prompt_name = parts[1]
+                edit_prompt(prompt_name)
+                continue  # Continue after editing
+
+            # Process /prompt commands within user input
+            user_input = re.sub(
+                r'/prompt\s+(\w+)',
+                lambda match: config['prompts'].get(
+                    match.group(1), f"/prompt {match.group(1)}"
+                ),
+                user_input
+            )
+
+            # If any /prompt was not found and created, remove it from prompt
+            if '/prompt' in user_input:
+                # Split the input to find missing prompts
+                parts = user_input.split()
+                for i, part in enumerate(parts):
+                    if part == '/prompt' and i + 1 < len(parts):
+                        prompt_name = parts[i + 1]
+                        if prompt_name in config['prompts']:
+                            replacement = config['prompts'][prompt_name]
+                            parts[i] = replacement
+                            del parts[i + 1]
+                        else:
+                            ui.print_warning(f"Prompt '{prompt_name}' not found. Starting prompt creation.")
+                            create_prompt(prompt_name)
+                            del parts[i:i+2]
+                user_input = ' '.join(parts)
+
+            # Now, check for commands
             first_word = user_input.strip().split(' ')[0]
             if first_word[0] == '/' and first_word not in valid_commands + ['//']:
                 ui.print_warning(f'Unrecognized command: {first_word}')
@@ -276,6 +361,8 @@ def main():
                             value = value.lower() in ['true', '1', 'yes']
                         elif expected_type == str:
                             value = str(value)
+                        elif expected_type == dict:
+                            value = json.loads(value)
                         else:
                             raise ValueError(f"No type handling implemented for '{option}'.")
 
@@ -297,15 +384,13 @@ def main():
                     ui.print_error("Usage: /config <option> <value> or /config help")
                 continue
 
-            if '/totality' in user_input:
-                ui.print_info('Replacing /totality with the totality_prompt')
-                user_input = user_input.replace('/totality', totality_prompt)
+            # Replace /prompt commands in the prompt
+            prompt += "\n\n<<<USER_INPUT>>>\n" + user_input + "\n<<</USER_INPUT>>>"
 
-            if '/spelling' in user_input:
-                ui.print_info('Replacing /spelling with the spelling_prompt')
-                user_input = user_input.replace('/spelling', spelling_prompt + "\n")
-
-            prompt += user_input + "\n\n"
+            if user_input[-6:].strip() == '/debug':
+                ui.print_warning('Debug mode. Printing out prompt:')
+                print(prompt)
+                continue
 
             # ui.print_info('Awaiting response', end='')
 

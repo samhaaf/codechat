@@ -15,7 +15,6 @@ class UserInterface:
         while still_inputting:
             try:
                 multiline_input = input(prompt_message if first_line else '')
-                first_line = False
             except EOFError:
                 sys.exit(0)
             if not multiline and multiline_input.startswith('!@#'):
@@ -30,6 +29,7 @@ class UserInterface:
             still_inputting = multiline
             last_input_time = time.time()
             user_input += ("" if first_line else '\n') + multiline_input
+            first_line = False
         return user_input
 
     def print(self, message='', end='\n', flush=True):

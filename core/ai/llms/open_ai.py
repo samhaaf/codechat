@@ -62,7 +62,7 @@ class OpenAI_LLM(LLM):
             params['n'] = num_choices
 
         if self.request_timeout is not None and self.request_timeout > 0:
-            params['request_timeout'] = request_timeout
+            params['timeout'] = self.request_timeout
 
         if stream:
             response = await AsyncOpenAI().chat.completions.create(**params, stream=True)
@@ -96,7 +96,7 @@ class OpenAI_LLM(LLM):
             params['n'] = num_choices
 
         if self.request_timeout is not None and self.request_timeout > 0:
-            params['request_timeout'] = request_timeout
+            params['timeout'] = self.request_timeout
 
         if stream:
             response = client.chat.completions.create(**params, stream=True)

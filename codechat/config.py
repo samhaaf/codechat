@@ -45,12 +45,28 @@ DEFAULT_CONFIG = {
         "**/*.sln.docstates",
         "**/*.sln.ide/",
         "**/.DS_Store",
-    ]
+    ],
+    "prompts": {
+        "totality": (
+            "Output all of the files you're changing in totality. "
+            "Don't use any placeholders like '...' or 'your logic goes here'."
+        ),
+        "spelling": (
+            "This prompt was written quickly and contains some spelling issues. " +
+            "Please begin your response by rewriting the prompt with correct spelling. "
+        ),
+        "discuss": (
+            "Please explain the task at hand in totality. "
+            "Do not solve the problem or output any code. "
+            "Do not do any `example implementation`s. "
+        ),
+    }
 }
 
 ALLOWED_CONFIG_OPTIONS = {
     "model": str,
     # Add other configuration options and their expected types here
+    "prompts": dict
 }
 
 ui = UserInterface()
@@ -76,6 +92,11 @@ def load_config(app_name='codechat'):
     except Exception as e:
         ui.print_error(f"Error loading configuration: {e}")
         config_data = DEFAULT_CONFIG.copy()
+
+    # Ensure 'prompts' exists in config
+    if 'prompts' not in config_data:
+        config_data['prompts'] = DEFAULT_CONFIG['prompts']
+
     return config_data
 
 def save_config(config_data):
