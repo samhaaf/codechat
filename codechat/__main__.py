@@ -28,8 +28,8 @@ def main():
         '/model',
         '/config',
         '/prompt',
-        '/debug',
-        '/prompt-edit'
+        '/prompt-edit',
+        '/prompt-list'  # Newly added command
     ]
 
     ui = UserInterface()  # Initialize the UserInterface
@@ -41,7 +41,7 @@ def main():
 
     def get_files_prompt(paths):
         if len(paths) > 0:
-            return get_files_content(paths, exclusion_rules=exclusion_rules)
+            return get_files_content(paths, exclusion_rules=exclusion_rules) + '\n'
         return ''
 
     parser = argparse.ArgumentParser(description='AI Assistant for Coding Assistance')
@@ -225,6 +225,15 @@ def main():
         save_config(config)
         ui.print_info(f"Prompt '{prompt_name}' has been updated.")
 
+    def list_prompts():
+        """List all saved prompts."""
+        if not config.get('prompts'):
+            ui.print_info("No prompts have been saved yet.")
+            return
+        ui.print_info("Saved Prompts:")
+        for prompt_name, prompt_content in config['prompts'].items():
+            ui.print(f"\n/prompt {prompt_name}:    {prompt_content}\n")
+
     def handle_prompt_command(command_parts):
         """Handle the /prompt command within user input."""
         nonlocal prompt
@@ -253,7 +262,7 @@ def main():
                 ui.print_warning('No user input provided.')
                 continue
 
-            # Check if the first input is /prompt-edit
+            # Handle /prompt-edit command
             if user_input.strip().startswith('/prompt-edit'):
                 parts = user_input.strip().split(' ', 1)
                 if len(parts) != 2:
@@ -384,8 +393,13 @@ def main():
                     ui.print_error("Usage: /config <option> <value> or /config help")
                 continue
 
+            # Now, handle the new /prompt-list command
+            if user_input.strip() == '/prompt-list':
+                list_prompts()
+                continue
+
             # Replace /prompt commands in the prompt
-            prompt += "\n\n<<<USER_INPUT>>>\n" + user_input + "\n<<</USER_INPUT>>>"
+            prompt += user_input
 
             if user_input[-6:].strip() == '/debug':
                 ui.print_warning('Debug mode. Printing out prompt:')
