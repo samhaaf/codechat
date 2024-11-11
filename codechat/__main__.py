@@ -207,20 +207,21 @@ def main():
     def create_prompt(prompt_name):
         """CLI to create a new prompt."""
         ui.print_info(f"Creating a new prompt: '{prompt_name}'")
-        prompt_content = ui.get_user_input("|< Enter the prompt content (finish with '!@#' on a new line): ")
+        prompt_content = ui.get_user_input("|< Enter the prompt content:")
         config['prompts'][prompt_name] = prompt_content
         save_config(config)
         ui.print_info(f"Prompt '{prompt_name}' has been created.")
 
     def edit_prompt(prompt_name):
-        """CLI to edit an existing prompt."""
+        """CLI to edit an existing prompt or create a new one if it doesn't exist."""
         if prompt_name not in config['prompts']:
-            ui.print_error(f"Prompt '{prompt_name}' does not exist.")
+            ui.print_warning(f"Prompt '{prompt_name}' does not exist. Initiating creation process.")
+            create_prompt(prompt_name)
             return
         ui.print_info(f"Editing prompt: '{prompt_name}'")
         current_content = config['prompts'][prompt_name]
         ui.print_info(f"Current content:\n{current_content}")
-        new_content = ui.get_user_input("|< Enter the new prompt content (finish with '!@#' on a new line): ")
+        new_content = ui.get_user_input("|< Enter the new prompt content:")
         config['prompts'][prompt_name] = new_content
         save_config(config)
         ui.print_info(f"Prompt '{prompt_name}' has been updated.")
