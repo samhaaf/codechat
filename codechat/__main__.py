@@ -9,7 +9,7 @@ import traceback
 import re
 from .files import get_updated_files_in, get_files_content, display_files
 from .art import title_art
-from .prompts import system_prompt, spelling_prompt  # Removed totality_prompt
+# from .prompts import system_prompt, spelling_prompt  # Removed totality_prompt
 from .config import config, update_config, ALLOWED_CONFIG_OPTIONS, save_config
 from .user_interface import UserInterface
 from .apply_diff import apply_cli
@@ -17,6 +17,7 @@ import json
 
 def main():
     valid_commands = [
+        "/debug",
         "/reset",
         "/deltas",
         "/patch",
@@ -293,6 +294,7 @@ def main():
                             replacement = config['prompts'][prompt_name]
                             parts[i] = replacement
                             del parts[i + 1]
+                            ui.print_info(f'Injected /prompt {prompt_name}')
                         else:
                             ui.print_warning(f"Prompt '{prompt_name}' not found. Starting prompt creation.")
                             create_prompt(prompt_name)
@@ -426,7 +428,7 @@ def main():
 
             # Print timer
             start = time.time()
-            while first_chunk == -1 and time.time() - start < 200:
+            while first_chunk == -1 and time.time() - start < 300:
                 ui.print_info(
                     f"Awaiting response.. ({round(time.time() - start, 1)}s)",
                     end='\r', flush=True
